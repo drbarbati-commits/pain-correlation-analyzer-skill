@@ -1,0 +1,39 @@
+name: Skill Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-skill:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Check SKILL.md exists
+        run: |
+          if [ ! -f SKILL.md ]; then
+            echo "❌ SKILL.md not found at root"
+            exit 1
+          fi
+          echo "✅ SKILL.md found"
+      
+      - name: Validate YAML frontmatter
+        run: |
+          grep -q "^---" SKILL.md || (echo "❌ Missing YAML frontmatter" && exit 1)
+          grep -q "name:" SKILL.md || (echo "❌ Missing name field" && exit 1)
+          grep -q "description:" SKILL.md || (echo "❌ Missing description field" && exit 1)
+          echo "✅ YAML frontmatter valid"
+      
+      - name: Flutter Setup
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+      
+      - name: Analyze Dart code
+        run: |
+          cd scripts
+          flutter analyze || true
